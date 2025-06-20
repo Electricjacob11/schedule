@@ -18,6 +18,13 @@ import java.util.Date
 private lateinit var binding: ActivityMainBinding
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val channelID = "scheduleme_channel"
+        const val titleExtra = "titleExtra"
+        const val messageExtra = "messageExtra"
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,12 +43,14 @@ class MainActivity : ComponentActivity() {
         intent.putExtra(titleExtra, title)
         intent.putExtra(messageExtra, message)
 
+        val requestCode = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
         val pendingIntent = PendingIntent.getBroadcast(
             applicationContext,
-            notificationID,
+            requestCode, // 👈 UNIQUE for each alarm
             intent,
             PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val time = getTime()
