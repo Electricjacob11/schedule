@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
             time,
             pendingIntent
         )
+        AlarmHelper.saveAlarm(applicationContext, time, title, message)
         showAlert(time, title, message)
     }
 
