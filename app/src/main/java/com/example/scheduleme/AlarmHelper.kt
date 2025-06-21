@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.example.scheduleme.MainActivity.Companion.messageExtra
 import com.example.scheduleme.MainActivity.Companion.titleExtra
 import androidx.core.content.edit
@@ -37,7 +38,7 @@ object AlarmHelper {
         }
     }
 
-    fun scheduleNotification(context: Context, time: Long, title: String, message: String) {
+    fun scheduleNotification(context: Context, time: Long, title: String, message: String): Boolean {
         val intent = Intent(context, NotificationReceiver::class.java).apply {
             putExtra(titleExtra, title)
             putExtra(messageExtra, message)
@@ -52,7 +53,17 @@ object AlarmHelper {
         )
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+            } else {
+                // Optional: Prompt user to allow exact alarms in settings
+                return false // indicate that exact alarm could not be scheduled
+            }
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        }
+        return true
     }
 }
 
