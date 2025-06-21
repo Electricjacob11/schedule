@@ -16,6 +16,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.UUID
 import kotlin.math.absoluteValue
+import androidx.core.net.toUri
 
 private lateinit var binding: ActivityMainBinding
 
@@ -37,7 +38,8 @@ class MainActivity : ComponentActivity() {
         binding.submitButton.setOnClickListener {
             val title = binding.titleET.text.toString()
             val message = binding.messageET.text.toString()
-            val weeks = binding.repeatET.text.toString().toInt()
+            val weeks = binding.repeatET.text.toString().toIntOrNull() ?: 1
+
             if (weeks > 1) {
                 for (i in 0..weeks - 1) {
                     scheduleNotification(i, title, message)
@@ -64,13 +66,20 @@ class MainActivity : ComponentActivity() {
         )
 
 
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val time = getTime(week)
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            time,
-            pendingIntent
-        )
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+            } else {
+                // Optional: Prompt user to allow exact alarms in settings
+                showExactAlarmPermissionDialog()
+            }
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        }
+
         AlarmHelper.saveAlarm(applicationContext, time, title, message)
         showAlert(time, title, message)
     }
@@ -104,7 +113,7 @@ class MainActivity : ComponentActivity() {
             set(Calendar.MILLISECOND, 0)
 
             // ✅ Safely add weeks without worrying about month/year rollovers
-            add(Calendar.MINUTE, weekNumber)
+            add(Calendar.DAY_OF_MONTH, weekNumber)
         }
 
         return calendar.timeInMillis
@@ -123,4 +132,13 @@ class MainActivity : ComponentActivity() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
     }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun showExactAlarmPermissionDialog() {
+        val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+            data = "package:$packageName".toUri()
+        }
+        startActivity(intent)
+    }
+
 }
