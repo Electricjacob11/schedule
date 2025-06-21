@@ -9,6 +9,8 @@ import androidx.core.content.ContextCompat
 import com.example.scheduleme.MainActivity.Companion.channelID
 import com.example.scheduleme.MainActivity.Companion.messageExtra
 import com.example.scheduleme.MainActivity.Companion.titleExtra
+import java.util.UUID
+import kotlin.math.absoluteValue
 
 class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -22,7 +24,7 @@ class NotificationReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
 
-        val notificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+        val notificationId = UUID.randomUUID().hashCode().absoluteValue
         val notificationManager = ContextCompat.getSystemService(
             context, NotificationManager::class.java
         )
