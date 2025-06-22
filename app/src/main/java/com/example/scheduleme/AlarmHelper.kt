@@ -110,21 +110,43 @@ object AlarmHelper {
 
     fun getSavedAlarms(context: Context): List<StoredAlarm> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val alarmList = prefs.getStringSet("alarms", null) ?: return emptyList()
+        val alarmList = prefs.getStringSet("alarms", null)?.toMutableSet() ?: return emptyList()
 
-        return alarmList.mapNotNull { entry ->
+        val currentTime = System.currentTimeMillis()
+        val validAlarms = mutableListOf<StoredAlarm>()
+        val toRemove = mutableSetOf<String>()
+
+        for (entry in alarmList) {
             val parts = entry.split("||")
             if (parts.size == 4) {
                 val time = parts[0].toLongOrNull()
                 val title = parts[1]
                 val message = parts[2]
                 val requestCode = parts[3].toIntOrNull()
+
                 if (time != null && requestCode != null) {
-                    StoredAlarm(time, title, message, requestCode)
-                } else null
-            } else null
+                    if (time > currentTime) {
+                        validAlarms.add(StoredAlarm(time, title, message, requestCode))
+                    } else {
+                        toRemove.add(entry)
+                    }
+                } else {
+                    toRemove.add(entry)
+                }
+            } else {
+                toRemove.add(entry)
+            }
         }
+
+        // Clean up expired entries
+        if (toRemove.isNotEmpty()) {
+            alarmList.removeAll(toRemove)
+            prefs.edit().putStringSet("alarms", alarmList).apply()
+        }
+
+        return validAlarms
     }
+
 
 }
 
