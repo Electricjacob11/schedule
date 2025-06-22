@@ -8,15 +8,17 @@ import android.os.Build
 import com.example.scheduleme.MainActivity.Companion.messageExtra
 import com.example.scheduleme.MainActivity.Companion.titleExtra
 import androidx.core.content.edit
+import java.util.UUID
+import kotlin.math.absoluteValue
 
 object AlarmHelper {
 
     private const val PREFS_NAME = "scheduled_alarms"
 
-    fun saveAlarm(context: Context, time: Long, title: String, message: String) {
+    fun saveAlarm(context: Context, time: Long, title: String, message: String, requestCode: Int) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val alarmList = prefs.getStringSet("alarms", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-        alarmList.add("$time||$title||$message")
+        alarmList.add("$time||$title||$message||$requestCode")
         prefs.edit { putStringSet("alarms", alarmList) }
     }
 
@@ -44,7 +46,7 @@ object AlarmHelper {
             putExtra(messageExtra, message)
         }
 
-        val requestCode = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+        val requestCode = UUID.randomUUID().hashCode().absoluteValue
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             requestCode,

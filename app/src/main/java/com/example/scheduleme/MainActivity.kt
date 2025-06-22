@@ -43,7 +43,6 @@ class MainActivity : ComponentActivity() {
             if (weeks > 1) {
                 for (i in 0..weeks - 1) {
                     scheduleNotification(i, title, message)
-                    Thread.sleep(11)
                 }
             } else {
                 scheduleNotification(0, title, message)
@@ -80,7 +79,7 @@ class MainActivity : ComponentActivity() {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
         }
 
-        AlarmHelper.saveAlarm(applicationContext, time, title, message)
+        AlarmHelper.saveAlarm(applicationContext, time, title, message, requestCode)
         showAlert(time, title, message)
     }
 
