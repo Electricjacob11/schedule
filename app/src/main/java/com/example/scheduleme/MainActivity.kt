@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -47,6 +48,10 @@ class MainActivity : ComponentActivity() {
             } else {
                 scheduleNotification(0, title, message)
             }
+        }
+
+        binding.cancelButton.setOnClickListener {
+            showCancelAlarmSelector()
         }
     }
 
@@ -139,5 +144,37 @@ class MainActivity : ComponentActivity() {
         }
         startActivity(intent)
     }
+
+    private fun showCancelAlarmSelector() {
+        val alarms = AlarmHelper.getSavedAlarms(this)
+        if (alarms.isEmpty()) {
+            Toast.makeText(this, "No alarms to cancel", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val alarmLabels = alarms.map {
+            val date = Date(it.time)
+            val dateStr = android.text.format.DateFormat.format("yyyy-MM-dd HH:mm", date)
+            "${it.title} @ $dateStr"
+        }.toTypedArray()
+
+        val checkedItems = BooleanArray(alarms.size)
+
+        AlertDialog.Builder(this)
+            .setTitle("Select Alarms to Cancel")
+            .setMultiChoiceItems(alarmLabels, checkedItems) { _, which, isChecked ->
+                checkedItems[which] = isChecked
+            }
+            .setPositiveButton("Cancel Selected") { _, _ ->
+                val toCancel = alarms.filterIndexed { index, _ -> checkedItems[index] }
+                toCancel.forEach {
+                    AlarmHelper.cancelAlarm(this, it.time, it.title, it.message)
+                }
+                Toast.makeText(this, "Canceled ${toCancel.size} alarms", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Dismiss", null)
+            .show()
+    }
+
 
 }
