@@ -23,22 +23,12 @@ object AlarmHelper {
     }
 
     fun rescheduleAlarms(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val alarmList = prefs.getStringSet("alarms", null) ?: return
-
-        for (entry in alarmList) {
-            val parts = entry.split("||")
-            if (parts.size == 3) {
-                val time = parts[0].toLongOrNull() ?: continue
-                val title = parts[1]
-                val message = parts[2]
-
-                if (time > System.currentTimeMillis()) {
-                    scheduleNotification(context, time, title, message)
-                }
-            }
+        val alarms = getSavedAlarms(context)
+        for (alarm in alarms) {
+            scheduleNotification(context, alarm.time, alarm.title, alarm.message)
         }
     }
+
 
     fun scheduleNotification(context: Context, time: Long, title: String, message: String): Boolean {
         val intent = Intent(context, NotificationReceiver::class.java).apply {

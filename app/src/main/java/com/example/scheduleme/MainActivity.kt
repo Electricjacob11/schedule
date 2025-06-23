@@ -41,17 +41,22 @@ class MainActivity : ComponentActivity() {
             val message = binding.messageET.text.toString()
             val weeks = binding.repeatET.text.toString().toIntOrNull() ?: 1
 
-            if (weeks > 1) {
-                for (i in 0..weeks - 1) {
-                    scheduleNotification(i, title, message)
-                }
-            } else {
-                scheduleNotification(0, title, message)
-            }
+            scheduleHelper(title, message, weeks)
         }
 
         binding.cancelButton.setOnClickListener {
             showCancelAlarmSelector()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun scheduleHelper(title: String, message: String, weeks: Int) {
+        if (weeks > 1) {
+            for (i in 0..weeks - 1) {
+                scheduleNotification(i, title, message)
+            }
+        } else {
+            scheduleNotification(0, title, message)
         }
     }
 
