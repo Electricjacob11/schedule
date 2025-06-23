@@ -130,7 +130,7 @@ class MainActivity : ComponentActivity() {
             set(Calendar.MILLISECOND, 0)
 
             // ✅ Safely add weeks without worrying about month/year rollovers
-            add(Calendar.DAY_OF_MONTH, weekNumber)
+            add(Calendar.WEEK_OF_YEAR, weekNumber)
         }
 
         return calendar
@@ -153,7 +153,7 @@ class MainActivity : ComponentActivity() {
             set(Calendar.MILLISECOND, 0)
 
             // ✅ Safely add weeks without worrying about month/year rollovers
-            add(Calendar.DAY_OF_MONTH, weekNumber)
+            add(Calendar.WEEK_OF_YEAR, weekNumber)
             add(Calendar.HOUR_OF_DAY, -4)
         }
 
