@@ -42,6 +42,10 @@ class MainActivity : ComponentActivity() {
             val weeks = binding.repeatET.text.toString().toIntOrNull() ?: 1
 
             scheduleHelper(title, message, weeks)
+
+            if (title.contains("class", ignoreCase = true)) {
+                medHelper("Medication time", "For: $title", weeks)
+            }
         }
 
         binding.cancelButton.setOnClickListener {
@@ -51,17 +55,34 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun scheduleHelper(title: String, message: String, weeks: Int) {
+
         if (weeks > 1) {
             for (i in 0..weeks - 1) {
-                scheduleNotification(i, title, message)
+                val time = getTime(i).timeInMillis
+                scheduleNotification(title, message, time)
             }
         } else {
-            scheduleNotification(0, title, message)
+            val time = getTime(0).timeInMillis
+            scheduleNotification(title, message, time)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun scheduleNotification(week : Int, title: String, message: String) {
+    private fun medHelper(title: String, message: String, weeks: Int) {
+
+        if (weeks > 1) {
+            for (i in 0..weeks - 1) {
+                val time = getMedTime(i).timeInMillis
+                scheduleNotification(title, message, time)
+            }
+        } else {
+            val time = getMedTime(0).timeInMillis
+            scheduleNotification(title, message, time)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun scheduleNotification(title: String, message: String, time: Long) {
         val intent = Intent(applicationContext, NotificationReceiver::class.java)
         intent.putExtra(titleExtra, title)
         intent.putExtra(messageExtra, message)
@@ -75,7 +96,6 @@ class MainActivity : ComponentActivity() {
         )
 
 
-        val time = getTime(week)
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -93,19 +113,7 @@ class MainActivity : ComponentActivity() {
         showAlert(time, title, message)
     }
 
-    private fun showAlert(time: Long, title: String, message: String) {
-        val date = Date(time)
-        val dateFormat = android.text.format.DateFormat.getLongDateFormat(applicationContext)
-        val timeFormat = android.text.format.DateFormat.getTimeFormat(applicationContext)
-
-        AlertDialog.Builder(this)
-            .setTitle("Notification scheduled")
-            .setMessage("Title: $title\nMessage: $message\nAt: ${dateFormat.format(date)} ${timeFormat.format(date)}")
-            .setPositiveButton("Okay") { _, _ -> }
-            .show()
-    }
-
-    private fun getTime(weekNumber: Int): Long {
+    private fun getTime(weekNumber: Int): Calendar {
         val minute = binding.timePicker.minute
         val hour = binding.timePicker.hour
         val day = binding.datePicker.dayOfMonth
@@ -125,7 +133,43 @@ class MainActivity : ComponentActivity() {
             add(Calendar.DAY_OF_MONTH, weekNumber)
         }
 
-        return calendar.timeInMillis
+        return calendar
+    }
+
+    private fun getMedTime(weekNumber: Int): Calendar {
+        val minute = binding.timePicker.minute
+        val hour = binding.timePicker.hour
+        val day = binding.datePicker.dayOfMonth
+        val month = binding.datePicker.month
+        val year = binding.datePicker.year
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.MONTH, month)
+            set(Calendar.DAY_OF_MONTH, day)
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+
+            // ✅ Safely add weeks without worrying about month/year rollovers
+            add(Calendar.DAY_OF_MONTH, weekNumber)
+            add(Calendar.HOUR_OF_DAY, -4)
+        }
+
+        return calendar
+    }
+
+    private fun showAlert(time: Long, title: String, message: String) {
+        val date = Date(time)
+        val dateFormat = android.text.format.DateFormat.getLongDateFormat(applicationContext)
+        val timeFormat = android.text.format.DateFormat.getTimeFormat(applicationContext)
+
+        AlertDialog.Builder(this)
+            .setTitle("Notification scheduled")
+            .setMessage("Title: $title\nMessage: $message\nAt: ${dateFormat.format(date)} ${timeFormat.format(date)}")
+            .setPositiveButton("Okay") { _, _ -> }
+            .show()
     }
 
 
